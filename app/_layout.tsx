@@ -26,6 +26,10 @@ export default function RootLayout() {
   const [interLoaded, interError] = useFonts({
     Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
+    CherryCreamSoda: require('../assets/fonts/Cherry_Cream_Soda/CherryCreamSoda-Regular.ttf'),
+    Jersey15: require('../assets/fonts/Jersey_15/Jersey15-Regular.ttf'),
+    SairaStencilOne: require('../assets/fonts/Saira_Stencil_One/SairaStencilOne-Regular.ttf'),
+    SpicyRice: require('../assets/fonts/Spicy_Rice/SpicyRice-Regular.ttf'),
   })
 
   useEffect(() => {

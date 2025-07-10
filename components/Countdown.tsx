@@ -2,6 +2,7 @@ import { Button, XStack, YStack, Paragraph, H1 } from 'tamagui'
 import { Play, Pause, Circle, CheckCircle, Check } from '@tamagui/lucide-icons'
 import { useState, useRef, useEffect } from 'react'
 import ResetSheet from './ResetSheet'
+import { Audio } from 'expo-av'
 
 type CountdownProps = {
     focusMinutes: number
@@ -19,12 +20,16 @@ export default function Countdown({
     longBreakMinutes,
     rounds,
     fontFamily = 'System',
-}: CountdownProps) {
+    focusMusic,
+    breakMusic,
+}: CountdownProps & { focusMusic?: string | null; breakMusic?: string | null }) {
     const [phase, setPhase] = useState<Phase>('focus')
     const [currentRound, setCurrentRound] = useState(1)
     const [isRunning, setIsRunning] = useState(false)
     const [timeLeft, setTimeLeft] = useState(focusMinutes * 60)
+    const [musicIndex, setMusicIndex] = useState(0)
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    const soundRef = useRef<Audio.Sound | null>(null)
 
     useEffect(() => {
         if (phase === 'focus') setTimeLeft(focusMinutes * 60)
@@ -61,6 +66,52 @@ export default function Countdown({
         return () => clearInterval(timerRef.current!)
         // eslint-disable-next-line
     }, [isRunning, phase, currentRound, rounds])
+
+    useEffect(() => {
+        let isMounted = true
+
+        async function playMusic() {
+            if (soundRef.current) {
+                await soundRef.current.unloadAsync()
+                soundRef.current = null
+            }
+
+            let files: string[] = []
+            if (phase === 'focus') files = getAudioFiles(focusMusic)
+            else if (phase === 'short' || phase === 'long') files = getAudioFiles(breakMusic)
+
+            if (!files.length) return
+
+            let idx = musicIndex
+            if (idx >= files.length) idx = 0
+
+            const { sound } = await Audio.Sound.createAsync(
+                require(`../assets/audio/${files[idx]}`),
+                { shouldPlay: true, isLooping: false }
+            )
+            soundRef.current = sound
+
+            sound.setOnPlaybackStatusUpdate(async (status) => {
+                if (!isMounted) return
+                if (status.isLoaded && status.didJustFinish) {
+                    let nextIdx = idx + 1
+                    if (nextIdx >= files.length) nextIdx = 0
+                    setMusicIndex(nextIdx)
+                }
+            })
+        }
+
+        playMusic()
+
+        return () => {
+            isMounted = false
+            if (soundRef.current) {
+                soundRef.current.unloadAsync()
+                soundRef.current = null
+            }
+        }
+        // eslint-disable-next-line
+    }, [phase, focusMusic, breakMusic, musicIndex])
 
     function formatTime(sec: number) {
         const h = Math.floor(sec / 3600)
@@ -103,6 +154,33 @@ export default function Countdown({
                 )}
             </XStack>
         )
+    }
+
+    function getAudioFiles(option: string | null) {
+        if (!option) return []
+        if (option === 'morning-forest') return ['morning-forest.mp3']
+        if (option === 'night-forest') {
+            return [
+                'night-forest.mp3',
+                'night-lofi-2.mp3',
+                'night-lofi-3.mp3',
+                'night-lofi-4.mp3',
+                'night-lofi-5.mp3',
+                'night-lofi-6.mp3',
+                'night-lofi-7.mp3',
+            ]
+        }
+        if (option === 'ocean-waves') return ['ocean-waves.mp3']
+        if (option === 'rain') return ['rain.mp3']
+        if (option === 'soothing-instrumental') {
+            return [
+                'soothing-instrumental-1.mp3',
+                'soothing-instrumental-2.mp3',
+                'soothing-instrumental-3.mp3',
+                'soothing-instrumental-4.mp3',
+            ]
+        }
+        return []
     }
 
     return (
