@@ -1,6 +1,7 @@
-import { Button, XStack, YStack, H2, Paragraph, H1 } from 'tamagui'
-import { Play, Pause, RotateCcw, Circle, CheckCircle } from '@tamagui/lucide-icons'
+import { Button, XStack, YStack, Paragraph, H1 } from 'tamagui'
+import { Play, Pause, Circle, CheckCircle, Check } from '@tamagui/lucide-icons'
 import { useState, useRef, useEffect } from 'react'
+import ResetSheet from './ResetSheet'
 
 type CountdownProps = {
     focusMinutes: number
@@ -76,7 +77,7 @@ export default function Countdown({
         setIsRunning(r => !r)
     }
 
-    function handleReset() {
+    function handleDialogFinish() {
         setIsRunning(false)
         setCurrentRound(1)
         setPhase('focus')
@@ -95,9 +96,9 @@ export default function Countdown({
             <XStack gap="$2" mb="$3">
                 {Array.from({ length: rounds }).map((_, i) =>
                     i < filled ? (
-                        <CheckCircle key={i} size={20} />
+                        <CheckCircle key={`check-${i}`} size={20} />
                     ) : (
-                        <Circle key={i} size={20} />
+                        <Circle key={`circle-${i}`} size={20} />
                     )
                 )}
             </XStack>
@@ -111,7 +112,7 @@ export default function Countdown({
             {renderRoundCircles()}
             <XStack gap="$2">
                 <Button onPress={handleStartPause}>{isRunning ? <Pause /> : <Play />}</Button>
-                <Button onPress={handleReset}><RotateCcw /></Button>
+                <ResetSheet onFinish={handleDialogFinish} timeLeft={timeLeft} initialTime={focusMinutes * 60} />
             </XStack>
         </YStack>
     )
