@@ -1,12 +1,12 @@
 import { Sheet, Button, YStack, H5, XStack, Paragraph, ListItem } from "tamagui"
-import { Paintbrush } from "@tamagui/lucide-icons"
 
 const FONTS = [
   { label: "Monospace", value: "monospace" },
   { label: "Cherry Cream Soda", value: "CherryCreamSoda" },
   { label: "Jersey 15", value: "Jersey15" },
   { label: "Saira Stencil One", value: "SairaStencilOne" },
-  { label: "Spicy Rice", value: "SpicyRice" }
+  { label: "Spicy Rice", value: "SpicyRice" },
+  { label: "WDXL", value: "WDXL" },
 ]
 
 export default function ThemeSheet({
@@ -17,9 +17,6 @@ export default function ThemeSheet({
 }) {
   return (
     <>
-      <Button circular mr="$4" onPress={() => onOpenChange(true)}>
-        <Paintbrush />
-      </Button>
       <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[60]} dismissOnSnapToBottom modal>
         <Sheet.Overlay />
         <Sheet.Handle />
@@ -34,7 +31,7 @@ export default function ThemeSheet({
               }}
               bg={fontFamily === font.value ? "$blue3" : "transparent"}
             >
-              <Paragraph fontFamily={font.value}>{font.label}</Paragraph>
+              <Paragraph fontFamily={font.value as any}>{font.label}</Paragraph>
             </ListItem>
           ))}
         </YStack>

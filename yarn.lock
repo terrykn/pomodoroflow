@@ -7754,6 +7754,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-av@npm:~15.1.7":
+  version: 15.1.7
+  resolution: "expo-av@npm:15.1.7"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+    react-native-web: "*"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 10/8f3055b68cac76b627116cf93a63bebdacb8c0d22f630f9fdae7dc74633a945d9a469421fce0f4c345c730eda0d039d78c88e59c09e2219bfde7e259d42981ba
+  languageName: node
+  linkType: hard
+
 "expo-build-properties@npm:~0.14.6":
   version: 0.14.6
   resolution: "expo-build-properties@npm:0.14.6"
@@ -11316,6 +11331,7 @@ __metadata:
     babel-preset-expo: "npm:~13.0.0"
     burnt: "npm:^0.12.2"
     expo: "npm:53.0.7"
+    expo-av: "npm:~15.1.7"
     expo-build-properties: "npm:~0.14.6"
     expo-font: "npm:~13.3.1"
     expo-linking: "npm:~7.1.4"
