@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Sheet, Button, YStack, H5, Paragraph, XStack } from "tamagui"
 import { Check } from "@tamagui/lucide-icons"
+import { BlurView } from "expo-blur"
 
 type ResetSheetProps = {
     onFinish: () => void
@@ -14,13 +15,20 @@ export default function ResetSheet({ onFinish, timeLeft, initialTime }: ResetShe
 
     return (
         <>
-            <Button
-                circular
-                onPress={() => setOpen(true)}
-                disabled={isDisabled}
-            >
-                <Check />
-            </Button>
+            <BlurView intensity={50} tint="dark" style={{ borderRadius: 35, overflow: 'hidden' }}>
+                <Button
+                    circular
+                    chromeless
+                    bg="rgba(255, 255, 255, 0.03)"
+                    borderColor="rgba(255,255,255,0.1)"
+                    borderWidth={1}
+                    onPress={() => setOpen(true)}
+                    disabled={isDisabled}
+                >
+                    <Check />
+                </Button>    
+            </BlurView>
+            
             <Sheet
                 open={open}
                 onOpenChange={setOpen}

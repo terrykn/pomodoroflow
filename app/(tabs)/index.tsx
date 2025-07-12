@@ -5,9 +5,8 @@ import MusicSheet from 'components/MusicSheet'
 import ThemeSheet from 'components/ThemeSheet'
 import { Music, Paintbrush, Settings2 } from '@tamagui/lucide-icons'
 import TimerSettingSheet from 'components/TimerSettingSheet'
-import { LiquidGauge } from 'react-native-liquid-gauge'
-
 import { useWindowDimensions } from 'react-native'
+import { LiquidGaugeModified } from 'components/LiquidGaugeModified'
 
 const DEFAULT = {
   focusMinutes: 25,
@@ -46,9 +45,9 @@ export default function TabFocusScreen() {
         width={width}
         position="absolute"
       >
-          <LiquidGauge
-            height={height+70}
-            width={height+70}
+          <LiquidGaugeModified
+            height={height}
+            width={width}
             value={progress * 100}
             config={{
               minValue: 0,
@@ -56,22 +55,17 @@ export default function TabFocusScreen() {
               circleThickness: 0,
               circleFillGap: 0,
               circleColor: 'transparent',
-              waveHeight: 0.04,
-              waveCount: 3,
-              waveRiseTime: 2000,
-              waveAnimateTime: 5000,
+              waveHeight: 0.018,
+              waveCount: 1.2,
+              waveRiseTime: 1500,
+              waveAnimateTime: 12000,
               waveRise: true,
               waveHeightScaling: true,
               waveAnimate: true,
               waveColor: 'rgba(0, 63, 188, 0.59)',
               waveOffset: 0.2,
-              textVertPosition: 0.5,
-              textSize: 0,
-              valueCountUp: false,
               textSuffix: '',
-              textColor: 'white',
-              waveTextColor: 'white',
-              toFixed: 0,
+              textSize: 0,
             }}
           />
       </YStack>
