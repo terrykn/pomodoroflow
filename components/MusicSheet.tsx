@@ -1,3 +1,4 @@
+import { ChevronDown } from "@tamagui/lucide-icons"
 import { Button, Paragraph, XStack, YStack, H5, Sheet } from "tamagui"
 
 const MUSIC_OPTIONS = [
@@ -19,7 +20,7 @@ export default function MusicSheet({
   setBreakMusic,
 }) {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[90]} dismissOnSnapToBottom modal>
+    <Sheet snapPoints={[90]} open={open} onOpenChange={onOpenChange} dismissOnSnapToBottom modal>
       <Sheet.Overlay />
       <Sheet.Handle />
       <YStack p="$4" gap="$4">
@@ -60,6 +61,18 @@ export default function MusicSheet({
             </Button>
           ))}
         </XStack>
+        <Button
+          self="center"
+          size="$5"
+          circular
+          onPress={() => onOpenChange(false)}
+          variant="outlined"
+          borderWidth={1}
+          borderColor="$black4"
+          mt="$4"
+        >
+          <ChevronDown />
+        </Button>
       </YStack>
     </Sheet>
   )

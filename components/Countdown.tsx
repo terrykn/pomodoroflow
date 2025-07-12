@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import ResetSheet from './ResetSheet'
 import { Audio } from 'expo-av'
 import { BlurView } from 'expo-blur'
+import { Vibration } from 'react-native'
 
 type CountdownProps = {
     focusMinutes: number
@@ -19,6 +20,7 @@ type CountdownProps = {
 type Phase = 'focus' | 'short' | 'long'
 
 const AUDIO_MAP: Record<string, any> = {
+    'microwave-ding.mp3': require('../assets/audio/microwave-ding.mp3'),
     'morning-forest.mp3': require('../assets/audio/morning-forest.mp3'),
     'night-forest.mp3': require('../assets/audio/night-forest.mp3'),
     'night-lofi-2.mp3': require('../assets/audio/night-lofi-2.mp3'),
@@ -91,6 +93,8 @@ export default function Countdown({
 
         if (timeLeft === 0) {
             setIsRunning(false);
+            playDingSound();
+            Vibration.vibrate(200)
 
             if (phase === 'focus') {
                 if (currentRound < rounds) {
@@ -204,6 +208,25 @@ export default function Countdown({
         }
         // Only depend on breakMusic when in break phase
     }, [phase, breakMusic, musicIndex, isRunning])
+
+    async function playDingSound() {
+        try {
+            const { sound } = await Audio.Sound.createAsync(
+                AUDIO_MAP['microwave-ding.mp3'],
+                { shouldPlay: true }
+            )
+
+            await sound.playAsync()
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (!status.isLoaded) return
+                if (status.didJustFinish) {
+                    sound.unloadAsync()
+                }
+            })
+        } catch (e) {
+            console.error('Failed to play ding sound', e)
+        }
+    }
 
     function formatTime(sec: number) {
         const h = Math.floor(sec / 3600)
