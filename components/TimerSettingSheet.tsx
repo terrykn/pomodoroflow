@@ -38,7 +38,7 @@ export default function TimerSettingSheet({
     const focusOptions = [25, 45]
     const shortOptions = [5, 10]
     const longOptions = [15, 30]
-    const roundsOptions = [4, 8]
+    const roundsOptions = [4, 6, 8]
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange} snapPoints={[90]} dismissOnSnapToBottom modal>

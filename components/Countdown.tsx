@@ -9,7 +9,11 @@ type CountdownProps = {
     shortBreakMinutes: number
     longBreakMinutes: number
     rounds: number
+    focusMusic?: string | null
+    breakMusic?: string | null
+    onProgressChange?: (progress: number) => void // add this
 }
+
 
 type Phase = 'focus' | 'short' | 'long'
 
@@ -37,6 +41,7 @@ export default function Countdown({
     rounds,
     focusMusic,
     breakMusic,
+    onProgressChange,
 }: CountdownProps & { focusMusic?: string | null; breakMusic?: string | null }) {
     const [phase, setPhase] = useState<Phase>('focus')
     const [currentRound, setCurrentRound] = useState(0)
@@ -45,6 +50,8 @@ export default function Countdown({
     const [musicIndex, setMusicIndex] = useState(0)
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const soundRef = useRef<Audio.Sound | null>(null)
+
+
 
     useEffect(() => {
         if (phase === 'focus') setTimeLeft(focusMinutes * 60)
@@ -55,33 +62,49 @@ export default function Countdown({
     }, [phase, focusMinutes, shortBreakMinutes, longBreakMinutes])
 
     useEffect(() => {
-        if (!isRunning) return
+        if (!isRunning) return;
+
         timerRef.current = setInterval(() => {
             setTimeLeft(prev => {
-                if (prev > 0) return prev - 1
-                clearInterval(timerRef.current!)
-                setIsRunning(false)
-                if (phase === 'focus') {
-                    if (currentRound < rounds) {
-                        setCurrentRound(r => r + 1)
-                        setPhase('short')
-                    } else {
-                        setCurrentRound(r => r + 1)
-                        setPhase('long')
-                    }
-                } else if (phase === 'short') {
+                const next = prev - 1;
+                return next >= 0 ? next : 0;
+            });
+        }, 1000);
 
-                    setPhase('focus')
-                } else if (phase === 'long') {
+        return () => clearInterval(timerRef.current);
+    }, [isRunning]);
 
-                    setPhase('focus')
+    // Separate effect to handle timeLeft changes:
+    useEffect(() => {
+        if (!isRunning) return;
+
+        const total =
+            phase === 'focus'
+                ? focusMinutes * 60
+                : phase === 'short'
+                    ? shortBreakMinutes * 60
+                    : longBreakMinutes * 60;
+
+        const progress = Math.max(0, 1 - timeLeft / total);
+        onProgressChange?.(progress);
+
+        if (timeLeft === 0) {
+            setIsRunning(false);
+
+            if (phase === 'focus') {
+                if (currentRound < rounds) {
+                    setCurrentRound(r => r + 1);
+                    setPhase('short');
+                } else {
+                    setCurrentRound(r => r + 1);
+                    setPhase('long');
                 }
-                return 0
-            })
-        }, 1000)
-        return () => clearInterval(timerRef.current!)
-        // eslint-disable-next-line
-    }, [isRunning, phase, currentRound, rounds])
+            } else if (phase === 'short' || phase === 'long') {
+                setPhase('focus');
+            }
+        }
+    }, [timeLeft]);
+
 
     // Focus phase music effect
     useEffect(() => {

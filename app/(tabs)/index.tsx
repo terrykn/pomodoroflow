@@ -1,10 +1,13 @@
-import { useState } from 'react'
-import { YStack, Button, XStack } from 'tamagui'
+import { useState, useEffect } from 'react'
+import { YStack, Button, XStack, Paragraph } from 'tamagui'
 import Countdown from 'components/Countdown'
 import MusicSheet from 'components/MusicSheet'
 import ThemeSheet from 'components/ThemeSheet'
 import { Music, Paintbrush, Settings2 } from '@tamagui/lucide-icons'
 import TimerSettingSheet from 'components/TimerSettingSheet'
+import { LiquidGauge } from 'react-native-liquid-gauge'
+
+import { useWindowDimensions } from 'react-native'
 
 const DEFAULT = {
   focusMinutes: 25,
@@ -20,7 +23,7 @@ export default function TabFocusScreen() {
   const [focusMinutes, setFocusMinutes] = useState(DEFAULT.focusMinutes)
   const [shortBreakMinutes, setShortBreakMinutes] = useState(DEFAULT.shortBreakMinutes)
   const [longBreakMinutes, setLongBreakMinutes] = useState(DEFAULT.longBreakMinutes)
-  const [rounds, setRounds] = useState(DEFAULT.rounds)  
+  const [rounds, setRounds] = useState(DEFAULT.rounds)
   const [focusMusic, setFocusMusic] = useState(DEFAULT.focusMusic)
   const [breakMusic, setBreakMusic] = useState(DEFAULT.breakMusic)
 
@@ -28,14 +31,59 @@ export default function TabFocusScreen() {
   const [themeOpen, setThemeOpen] = useState(false)
   const [timerSettingOpen, setTimerSettingOpen] = useState(false)
 
+  const [progress, setProgress] = useState(0)
+  const { width, height } = useWindowDimensions()
+
   return (
     <>
-      <XStack pt="$9" bg="$background" position="absolute" z={10} r={0}>
+      {/* Liquid Gauge Background */}
+      <YStack
+        bg="$background"
+        items="center"
+        justify="center"
+        z={-2}
+        height={height}
+        width={width}
+        position="absolute"
+      >
+          <LiquidGauge
+            height={height+70}
+            width={height+70}
+            value={progress * 100}
+            config={{
+              minValue: 0,
+              maxValue: 100,
+              circleThickness: 0,
+              circleFillGap: 0,
+              circleColor: 'transparent',
+              waveHeight: 0.04,
+              waveCount: 3,
+              waveRiseTime: 2000,
+              waveAnimateTime: 5000,
+              waveRise: true,
+              waveHeightScaling: true,
+              waveAnimate: true,
+              waveColor: 'rgba(0, 63, 188, 0.59)',
+              waveOffset: 0.2,
+              textVertPosition: 0.5,
+              textSize: 0,
+              valueCountUp: false,
+              textSuffix: '',
+              textColor: 'white',
+              waveTextColor: 'white',
+              toFixed: 0,
+            }}
+          />
+      </YStack>
+
+      {/* Rest of the UI on top of the Liquid Gauge */}
+      <XStack pt="$9" bg="transparent" position="absolute" r={0}>
         <Button circular bg="transparent" onPress={() => setMusicOpen(true)}><Music /></Button>
         <Button circular bg="transparent" onPress={() => setThemeOpen(true)}><Paintbrush /></Button>
         <Button circular bg="transparent" onPress={() => setTimerSettingOpen(true)} mr="$4"><Settings2 /></Button>
       </XStack>
-      <YStack flex={1} items="center" justify="center" gap="$6" pt="$10" bg="$background">
+
+      <YStack flex={1} items="center" justify="center" gap="$6" bg="transparent">
         <Countdown
           focusMinutes={focusMinutes}
           shortBreakMinutes={shortBreakMinutes}
@@ -43,7 +91,9 @@ export default function TabFocusScreen() {
           rounds={rounds}
           focusMusic={focusMusic}
           breakMusic={breakMusic}
+          onProgressChange={setProgress}
         />
+
         <MusicSheet
           open={musicOpen}
           onOpenChange={setMusicOpen}
@@ -56,7 +106,7 @@ export default function TabFocusScreen() {
           open={themeOpen}
           onOpenChange={setThemeOpen}
         />
-        <TimerSettingSheet 
+        <TimerSettingSheet
           open={timerSettingOpen}
           onOpenChange={setTimerSettingOpen}
           focusMinutes={focusMinutes}
@@ -68,8 +118,8 @@ export default function TabFocusScreen() {
           setLongBreakMinutes={setLongBreakMinutes}
           setRounds={setRounds}
         />
+
       </YStack>
     </>
-
   )
 }
