@@ -353,12 +353,12 @@ export default function Countdown({
                 </BlurView>
                 <BlurView intensity={50} tint="dark" style={{ borderRadius: 35, overflow: 'hidden' }}>
                     <Button
-                    circular
-                    chromeless
-                    bg="rgba(255, 255, 255, 0.03)"
-                    borderColor="rgba(255,255,255,0.1)"
-                    borderWidth={1}
-                    onPress={handleSkip}
+                        circular
+                        chromeless
+                        bg="rgba(255, 255, 255, 0.03)"
+                        borderColor="rgba(255,255,255,0.1)"
+                        borderWidth={1}
+                        onPress={handleSkip}
                     >
                     <SkipForward />
                     </Button>

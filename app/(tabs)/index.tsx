@@ -58,11 +58,11 @@ export default function TabFocusScreen() {
               waveHeight: 0.018,
               waveCount: 1.2,
               waveRiseTime: 1500,
-              waveAnimateTime: 12000,
+              waveAnimateTime: 6000,
               waveRise: true,
               waveHeightScaling: true,
               waveAnimate: true,
-              waveColor: 'rgba(0, 63, 188, 0.59)',
+              waveColor: 'rgba(20, 91, 232, 1)',
               waveOffset: 0.2,
               textSuffix: '',
               textSize: 0,
@@ -73,7 +73,10 @@ export default function TabFocusScreen() {
       {/* Rest of the UI on top of the Liquid Gauge */}
       <XStack pt="$9" bg="transparent" position="absolute" r={0}>
         <Button circular bg="transparent" onPress={() => setMusicOpen(true)}><Music /></Button>
-        <Button circular bg="transparent" onPress={() => setThemeOpen(true)}><Paintbrush /></Button>
+
+        {/* still debating if I want people to choose theme */}
+        {/*<Button circular bg="transparent" onPress={() => setThemeOpen(true)}><Paintbrush /></Button>*/}
+
         <Button circular bg="transparent" onPress={() => setTimerSettingOpen(true)} mr="$4"><Settings2 /></Button>
       </XStack>
 
