@@ -15,6 +15,7 @@ export default function ResetSheet({ onFinish, timeLeft, initialTime }: ResetShe
     return (
         <>
             <Button
+                circular
                 onPress={() => setOpen(true)}
                 disabled={isDisabled}
             >

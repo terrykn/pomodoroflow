@@ -11,7 +11,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.red10.val,
         tabBarStyle: {
           backgroundColor: theme.background.val,
-          borderTopColor: theme.borderColor.val,
+          borderTopColor: 'transparent',
         },
         headerStyle: {
           backgroundColor: theme.background.val,
@@ -26,6 +26,7 @@ export default function TabLayout() {
           title: 'Focus',
           tabBarIcon: ({ color }) => <Timer color={color as any} />,
           headerShown: false,
+          tabBarLabel: () => null,
         }}
       />
       <Tabs.Screen
@@ -34,6 +35,7 @@ export default function TabLayout() {
           title: 'Insights',
           tabBarIcon: ({ color }) => <ChartSpline color={color as any} />,
           headerShown: false,
+          tabBarLabel: () => null,
         }}
       />
     </Tabs>

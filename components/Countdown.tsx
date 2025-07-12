@@ -1,5 +1,5 @@
 import { Button, XStack, YStack, Paragraph, H1 } from 'tamagui'
-import { Play, Pause, Circle, CheckCircle, Check } from '@tamagui/lucide-icons'
+import { Play, Pause, Circle, CheckCircle, Check, SkipForward } from '@tamagui/lucide-icons'
 import { useState, useRef, useEffect } from 'react'
 import ResetSheet from './ResetSheet'
 import { Audio } from 'expo-av'
@@ -9,7 +9,6 @@ type CountdownProps = {
     shortBreakMinutes: number
     longBreakMinutes: number
     rounds: number
-    fontFamily?: string
 }
 
 type Phase = 'focus' | 'short' | 'long'
@@ -31,28 +30,16 @@ const AUDIO_MAP: Record<string, any> = {
     'soothing-instrumental-4.mp3': require('../assets/audio/soothing-instrumental-4.mp3'),
 }
 
-const FONT_SIZE_MAP: Record<string, number> = {
-  Inter: 78,
-  InterBold: 74,
-  CherryCreamSoda: 67,
-  Jersey15: 91,
-  SairaStencilOne: 58,
-  SpicyRice: 66,
-  monospace: 73, 
-  WDXL: 78,
-}
-
 export default function Countdown({
     focusMinutes,
     shortBreakMinutes,
     longBreakMinutes,
     rounds,
-    fontFamily = 'Inter',
     focusMusic,
     breakMusic,
 }: CountdownProps & { focusMusic?: string | null; breakMusic?: string | null }) {
     const [phase, setPhase] = useState<Phase>('focus')
-    const [currentRound, setCurrentRound] = useState(1)
+    const [currentRound, setCurrentRound] = useState(0)
     const [isRunning, setIsRunning] = useState(false)
     const [timeLeft, setTimeLeft] = useState(focusMinutes * 60)
     const [musicIndex, setMusicIndex] = useState(0)
@@ -74,18 +61,19 @@ export default function Countdown({
                 if (prev > 0) return prev - 1
                 clearInterval(timerRef.current!)
                 setIsRunning(false)
-
                 if (phase === 'focus') {
                     if (currentRound < rounds) {
+                        setCurrentRound(r => r + 1)
                         setPhase('short')
                     } else {
+                        setCurrentRound(r => r + 1)
                         setPhase('long')
                     }
                 } else if (phase === 'short') {
-                    setCurrentRound(r => r + 1)
+
                     setPhase('focus')
                 } else if (phase === 'long') {
-                    setCurrentRound(1)
+
                     setPhase('focus')
                 }
                 return 0
@@ -208,9 +196,30 @@ export default function Countdown({
         setIsRunning(r => !r)
     }
 
+    function handleSkip() {
+        setIsRunning(false)
+        clearInterval(timerRef.current!)
+
+        if (phase === 'focus') {
+            if (currentRound < rounds) {
+                setCurrentRound(r => r + 1)
+                setPhase('short')
+            } else {
+                setCurrentRound(r => r + 1)
+                setPhase('long')
+            }
+        } else if (phase === 'short') {
+
+            setPhase('focus')
+        } else if (phase === 'long') {
+
+            setPhase('focus')
+        }
+    }
+
     function handleDialogFinish() {
         setIsRunning(false)
-        setCurrentRound(1)
+        setCurrentRound(0)
         setPhase('focus')
         setTimeLeft(focusMinutes * 60)
         if (soundRef.current) {
@@ -227,7 +236,8 @@ export default function Countdown({
     }
 
     function renderRoundCircles() {
-        const filled = phase === 'long' ? rounds : Math.min(currentRound - (phase === 'focus' ? 1 : 0), rounds)
+        const filled = Math.min(currentRound, rounds)
+
         return (
             <XStack gap="$2" mb="$4">
                 {Array.from({ length: rounds }).map((_, i) =>
@@ -278,9 +288,6 @@ export default function Countdown({
         return []
     }
 
-    const baseFontSize = 60
-    const adjustedFontSize = FONT_SIZE_MAP[fontFamily] ?? baseFontSize
-
     useEffect(() => {
         Audio.setAudioModeAsync({
             playsInSilentModeIOS: true,
@@ -303,11 +310,12 @@ export default function Countdown({
     return (
         <YStack width="100%" items="center" gap="$2">
             <Paragraph>{getPhaseLabel()}</Paragraph>
-            <H1 mt="$2" style={{ fontFamily, fontSize: adjustedFontSize }}>{formatTime(timeLeft)}</H1>
+            <H1 mt="$4" style={{ fontSize: 78, fontWeight: 100 }}>{formatTime(timeLeft)}</H1>
             {renderRoundCircles()}
-            <XStack gap="$2">
-                <Button onPress={handleStartPause}>{isRunning ? <Pause /> : <Play />}</Button>
+            <XStack gap="$2" items="center">
                 <ResetSheet onFinish={handleDialogFinish} timeLeft={timeLeft} initialTime={focusMinutes * 60} />
+                <Button circular size={70} onPress={handleStartPause}>{isRunning ? <Pause /> : <Play />}</Button>
+                <Button circular onPress={handleSkip}><SkipForward /></Button>
             </XStack>
         </YStack>
     )
