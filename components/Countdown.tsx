@@ -60,9 +60,28 @@ export default function Countdown({
     const [currentRound, setCurrentRound] = useState(0)
     const [isRunning, setIsRunning] = useState(false)
     const [timeLeft, setTimeLeft] = useState(focusMinutes * 60)
-    const [musicIndex, setMusicIndex] = useState(0)
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const soundRef = useRef<Audio.Sound | null>(null)
+
+    const [focusMusicIndex, setFocusMusicIndex] = useState(0)
+    const [focusMusicPosition, setFocusMusicPosition] = useState(0)
+    const [breakMusicIndex, setBreakMusicIndex] = useState(0)
+    const [breakMusicPosition, setBreakMusicPosition] = useState(0)
+
+    useEffect(() => {
+        async function stopAndResetAudio() {
+            if (soundRef.current) {
+                const status = await soundRef.current.getStatusAsync();
+                if (status.isLoaded) {
+                    await soundRef.current.stopAsync();
+                    await soundRef.current.unloadAsync();
+                }
+                soundRef.current = null;
+            }
+        }
+
+        stopAndResetAudio();
+    }, [phase]);
 
     useEffect(() => {
         if (phase === 'focus') setTimeLeft(focusMinutes * 60)
@@ -84,6 +103,28 @@ export default function Countdown({
 
         return () => clearInterval(timerRef.current);
     }, [isRunning]);
+
+    useEffect(() => {
+        async function controlSound() {
+            if (!soundRef.current) return
+
+            if (isRunning) {
+                await soundRef.current.playAsync()
+            } else {
+                const status = await soundRef.current.getStatusAsync()
+                if (status.isLoaded) {
+                    const currentPosition = status.positionMillis
+                    if (phase === 'focus') {
+                        setFocusMusicPosition(currentPosition)
+                    } else if (phase === 'short' || phase === 'long') {
+                        setBreakMusicPosition(currentPosition)
+                    }
+                    await soundRef.current.pauseAsync()
+                }
+            }
+        }
+        controlSound()
+    }, [isRunning, phase])
 
     // Separate effect to handle timeLeft changes:
     useEffect(() => {
@@ -127,31 +168,39 @@ export default function Countdown({
 
         async function playMusic() {
             if (soundRef.current) {
-                await soundRef.current.unloadAsync()
-                soundRef.current = null
+                const status = await soundRef.current.getStatusAsync()
+                if (status.isLoaded) {
+                    await soundRef.current.setPositionAsync(focusMusicPosition)
+                    await soundRef.current.playAsync()
+                    return
+                } else {
+                    await soundRef.current.unloadAsync()
+                    soundRef.current = null
+                }
             }
 
             const files = getAudioFiles(focusMusic ?? null)
             if (!files.length) return
 
-            let idx = musicIndex
+            let idx = focusMusicIndex
             if (idx >= files.length) idx = 0
 
             const audioModule = AUDIO_MAP[files[idx]]
             if (!audioModule) return
 
-            const { sound } = await Audio.Sound.createAsync(
-                audioModule,
-                { shouldPlay: true, isLooping: false }
-            )
+            const { sound } = await Audio.Sound.createAsync(audioModule, {
+                shouldPlay: true,
+                isLooping: false,
+            })
             soundRef.current = sound
 
-            sound.setOnPlaybackStatusUpdate(async (status) => {
+            sound.setOnPlaybackStatusUpdate((status) => {
                 if (!isMounted) return
                 if (status.isLoaded && status.didJustFinish) {
                     let nextIdx = idx + 1
                     if (nextIdx >= files.length) nextIdx = 0
-                    setMusicIndex(nextIdx)
+                    setFocusMusicIndex(nextIdx)
+                    setFocusMusicPosition(0)
                 }
             })
         }
@@ -160,13 +209,8 @@ export default function Countdown({
 
         return () => {
             isMounted = false
-            if (soundRef.current) {
-                soundRef.current.unloadAsync()
-                soundRef.current = null
-            }
         }
-        // Only depend on focusMusic when in focus phase
-    }, [phase, focusMusic, musicIndex, isRunning])
+    }, [phase, focusMusic, focusMusicIndex, isRunning, focusMusicPosition])
 
     // Break phase music effect
     useEffect(() => {
@@ -176,31 +220,39 @@ export default function Countdown({
 
         async function playMusic() {
             if (soundRef.current) {
-                await soundRef.current.unloadAsync()
-                soundRef.current = null
+                const status = await soundRef.current.getStatusAsync()
+                if (status.isLoaded) {
+                    await soundRef.current.setPositionAsync(breakMusicPosition)
+                    await soundRef.current.playAsync()
+                    return
+                } else {
+                    await soundRef.current.unloadAsync()
+                    soundRef.current = null
+                }
             }
 
             const files = getAudioFiles(breakMusic ?? null)
             if (!files.length) return
 
-            let idx = musicIndex
+            let idx = breakMusicIndex
             if (idx >= files.length) idx = 0
 
             const audioModule = AUDIO_MAP[files[idx]]
             if (!audioModule) return
 
-            const { sound } = await Audio.Sound.createAsync(
-                audioModule,
-                { shouldPlay: true, isLooping: false }
-            )
+            const { sound } = await Audio.Sound.createAsync(audioModule, {
+                shouldPlay: true,
+                isLooping: false,
+            })
             soundRef.current = sound
 
-            sound.setOnPlaybackStatusUpdate(async (status) => {
+            sound.setOnPlaybackStatusUpdate((status) => {
                 if (!isMounted) return
                 if (status.isLoaded && status.didJustFinish) {
                     let nextIdx = idx + 1
                     if (nextIdx >= files.length) nextIdx = 0
-                    setMusicIndex(nextIdx)
+                    setBreakMusicIndex(nextIdx)
+                    setBreakMusicPosition(0)
                 }
             })
         }
@@ -209,13 +261,17 @@ export default function Countdown({
 
         return () => {
             isMounted = false
+        }
+    }, [phase, breakMusic, breakMusicIndex, isRunning, breakMusicPosition])
+
+    useEffect(() => {
+        return () => {
             if (soundRef.current) {
                 soundRef.current.unloadAsync()
                 soundRef.current = null
             }
         }
-        // Only depend on breakMusic when in break phase
-    }, [phase, breakMusic, musicIndex, isRunning])
+    }, [])
 
     async function playDingSound() {
         try {

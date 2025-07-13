@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { YStack, Button, XStack, Paragraph } from 'tamagui'
+import { ActivityIndicator } from 'react-native' // For loading spinner
 import Countdown from 'components/Countdown'
 import MusicSheet from 'components/MusicSheet'
 import ThemeSheet from 'components/ThemeSheet'
-import { Music, Paintbrush, Settings2 } from '@tamagui/lucide-icons'
 import TimerSettingSheet from 'components/TimerSettingSheet'
+import { Music, Settings2 } from '@tamagui/lucide-icons'
 import { useWindowDimensions } from 'react-native'
 import { LiquidGaugeModified } from 'components/LiquidGaugeModified'
+
+import { saveToStorage, loadFromStorage, STORAGE_KEYS } from 'utils/storage'
 
 const DEFAULT = {
   focusMinutes: 25,
@@ -39,8 +42,6 @@ export default function TabFocusScreen() {
   const [shortBreakMinutes, setShortBreakMinutes] = useState(DEFAULT.shortBreakMinutes)
   const [longBreakMinutes, setLongBreakMinutes] = useState(DEFAULT.longBreakMinutes)
   const [rounds, setRounds] = useState(DEFAULT.rounds)
-  const [focusMusic, setFocusMusic] = useState(DEFAULT.focusMusic)
-  const [breakMusic, setBreakMusic] = useState(DEFAULT.breakMusic)
 
   const [musicOpen, setMusicOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
@@ -48,19 +49,73 @@ export default function TabFocusScreen() {
 
   const [progress, setProgress] = useState(0)
 
-  const [tasks, setTasks] = useState<Task[]>([DEFAULT_TASK])
-  const [selectedTask, setSelectedTask] = useState<Task | null>(DEFAULT_TASK)
+  const [tasks, setTasks] = useState<Task[] | null>(null)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [focusMusic, setFocusMusic] = useState<string | null>(null)
+  const [breakMusic, setBreakMusic] = useState<string | null>(null)
+
+  const [storageLoaded, setStorageLoaded] = useState(false)
 
   const { width, height } = useWindowDimensions()
 
   useEffect(() => {
-    if (selectedTask) {
+    const loadPersistedData = async () => {
+      try {
+        const storedTasks = await loadFromStorage<Task[]>(STORAGE_KEYS.TASKS)
+        const storedSelectedTask = await loadFromStorage<Task>(STORAGE_KEYS.SELECTED_TASK)
+        const storedFocusMusic = await loadFromStorage<string | null>(STORAGE_KEYS.FOCUS_MUSIC)
+        const storedBreakMusic = await loadFromStorage<string | null>(STORAGE_KEYS.BREAK_MUSIC)
+
+        setTasks(storedTasks && storedTasks.length > 0 ? storedTasks : [DEFAULT_TASK])
+        setSelectedTask(storedSelectedTask || DEFAULT_TASK)
+        setFocusMusic(storedFocusMusic !== undefined ? storedFocusMusic : DEFAULT.focusMusic)
+        setBreakMusic(storedBreakMusic !== undefined ? storedBreakMusic : DEFAULT.breakMusic)
+      } catch (error) {
+        setTasks([DEFAULT_TASK])
+        setSelectedTask(DEFAULT_TASK)
+        setFocusMusic(DEFAULT.focusMusic)
+        setBreakMusic(DEFAULT.breakMusic)
+      } finally {
+        setStorageLoaded(true) // signal that loading is done
+      }
+    }
+
+    loadPersistedData()
+  }, [])
+
+  useEffect(() => {
+    if (storageLoaded && selectedTask) {
       setFocusMinutes(selectedTask.focusMinutes)
       setShortBreakMinutes(selectedTask.shortBreakMinutes)
       setLongBreakMinutes(selectedTask.longBreakMinutes)
       setRounds(selectedTask.rounds)
     }
+  }, [storageLoaded, selectedTask])
+
+  useEffect(() => {
+    if (selectedTask) saveToStorage(STORAGE_KEYS.SELECTED_TASK, selectedTask)
   }, [selectedTask])
+
+  useEffect(() => {
+    if (tasks) saveToStorage(STORAGE_KEYS.TASKS, tasks)
+  }, [tasks])
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.FOCUS_MUSIC, focusMusic)
+  }, [focusMusic])
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.BREAK_MUSIC, breakMusic)
+  }, [breakMusic])
+
+  // Show loading spinner until storage is loaded and states are ready
+  if (!storageLoaded || !tasks || !selectedTask) {
+    return (
+      <YStack flex={1} justify="center" items="center" bg="$background">
+        <ActivityIndicator size="large" color="$white3" />
+      </YStack>
+    )
+  }
 
   return (
     <>
@@ -99,16 +154,21 @@ export default function TabFocusScreen() {
         />
       </YStack>
 
-      {/* Rest of the UI on top of the Liquid Gauge */}
+      {/* UI Controls */}
       <XStack pt="$9" bg="transparent" position="absolute" r={0}>
-        <Button circular bg="transparent" onPress={() => setMusicOpen(true)}><Music /></Button>
-
-        {/* still debating if I want people to choose theme */}
-        {/*<Button circular bg="transparent" onPress={() => setThemeOpen(true)}><Paintbrush /></Button>*/}
-
-        <Button circular bg="transparent" onPress={() => setTimerSettingOpen(true)} mr="$4"><Settings2 /></Button>
+        <Button circular bg="transparent" onPress={() => setMusicOpen(true)}>
+          <Music />
+        </Button>
+        {/* Uncomment if theme selection is desired */}
+        {/* <Button circular bg="transparent" onPress={() => setThemeOpen(true)}>
+          <Paintbrush />
+        </Button> */}
+        <Button circular bg="transparent" onPress={() => setTimerSettingOpen(true)} mr="$4">
+          <Settings2 />
+        </Button>
       </XStack>
 
+      {/* Main Content */}
       <YStack flex={1} items="center" justify="center" gap="$6" bg="transparent">
         <Countdown
           focusMinutes={focusMinutes}
@@ -132,10 +192,7 @@ export default function TabFocusScreen() {
           setFocusMusic={setFocusMusic}
           setBreakMusic={setBreakMusic}
         />
-        <ThemeSheet
-          open={themeOpen}
-          onOpenChange={setThemeOpen}
-        />
+        <ThemeSheet open={themeOpen} onOpenChange={setThemeOpen} />
         <TimerSettingSheet
           open={timerSettingOpen}
           onOpenChange={setTimerSettingOpen}
@@ -148,7 +205,6 @@ export default function TabFocusScreen() {
           setLongBreakMinutes={setLongBreakMinutes}
           setRounds={setRounds}
         />
-
       </YStack>
     </>
   )
