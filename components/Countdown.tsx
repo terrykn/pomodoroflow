@@ -357,25 +357,29 @@ export default function Countdown({
 
     return (
         <YStack width="100%" items="center" gap="$2">
-            <EditTask 
-                selectedTask={selectedTask}
-                setSelectedTask={setSelectedTask}
-            />
-            <H1 mt="$5" style={{ fontSize: 78, fontWeight: 100 }}>{formatTime(timeLeft)}</H1>
+            {phase === "focus" ? (
+                <EditTask
+                    selectedTask={selectedTask}
+                    setSelectedTask={setSelectedTask}
+                />
+            ) : (
+                <Paragraph>{getPhaseLabel()}</Paragraph>
+            )}
+            <H1 mt="$4" style={{ fontSize: 78, fontWeight: 100 }}>{formatTime(timeLeft)}</H1>
             {renderRoundCircles()}
             <XStack gap="$2" items="center">
                 <ResetSheet onFinish={handleDialogFinish} timeLeft={timeLeft} initialTime={focusMinutes * 60} />
                 <BlurView intensity={50} tint="dark" style={{ borderRadius: 35, overflow: 'hidden' }}>
                     <Button
-                    circular
-                    size={70}
-                    chromeless
-                    bg="rgba(255, 255, 255, 0.03)"
-                    borderColor="rgba(255,255,255,0.1)"
-                    borderWidth={1}
-                    onPress={handleStartPause}
+                        circular
+                        size={70}
+                        chromeless
+                        bg="rgba(255, 255, 255, 0.03)"
+                        borderColor="rgba(255,255,255,0.1)"
+                        borderWidth={1}
+                        onPress={handleStartPause}
                     >
-                    {isRunning ? <Pause /> : <Play />}
+                        {isRunning ? <Pause /> : <Play />}
                     </Button>
                 </BlurView>
                 <BlurView intensity={50} tint="dark" style={{ borderRadius: 35, overflow: 'hidden' }}>
@@ -387,7 +391,7 @@ export default function Countdown({
                         borderWidth={1}
                         onPress={handleSkip}
                     >
-                    <SkipForward />
+                        <SkipForward />
                     </Button>
                 </BlurView>
             </XStack>
