@@ -42,7 +42,7 @@ export default function TimerSettingSheet({
     const roundsOptions = [4, 6, 8]
 
     return (
-        <Sheet snapPoints={[90]} open={open} onOpenChange={onOpenChange} dismissOnSnapToBottom modal>
+        <Sheet snapPoints={[90]} open={open} onOpenChange={onOpenChange} dismissOnSnapToBottom disableDrag modal>
             <Sheet.Overlay />
             <Sheet.Handle />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -50,7 +50,6 @@ export default function TimerSettingSheet({
                     <H5>Timer Settings</H5>
 
                     {/* Focus */}
-
                     <XStack width="100%" mt="$2">
                         <Paragraph>Focus</Paragraph>
                     </XStack>

@@ -32,7 +32,7 @@ export default function ResetSheet({ onFinish, timeLeft, initialTime }: ResetShe
             <Sheet
                 open={open}
                 onOpenChange={setOpen}
-                snapPoints={[40]}
+                snapPoints={[30]}
                 dismissOnSnapToBottom
                 modal
             >
@@ -40,11 +40,13 @@ export default function ResetSheet({ onFinish, timeLeft, initialTime }: ResetShe
                 <Sheet.Handle />
                 <YStack p="$4" gap="$3">
                     <H5>End Session</H5>
-                    <Paragraph>Are you finished with your session?</Paragraph>
+                    <Paragraph>Do you want to finish this session?</Paragraph>
                     <XStack gap="$2" justify="flex-end">
                         <Button
                             onPress={() => setOpen(false)}
                             variant="outlined"
+                            borderColor="rgba(255,255,255,0.1)"
+                            borderWidth={1}
                         >
                             Cancel
                         </Button>

@@ -20,7 +20,7 @@ export default function MusicSheet({
   setBreakMusic,
 }) {
   return (
-    <Sheet snapPoints={[90]} open={open} onOpenChange={onOpenChange} dismissOnSnapToBottom modal>
+    <Sheet snapPoints={[90]} open={open} onOpenChange={onOpenChange} dismissOnSnapToBottom disableDrag modal>
       <Sheet.Overlay />
       <Sheet.Handle />
       <YStack p="$4" gap="$4">

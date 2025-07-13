@@ -5,6 +5,7 @@ import ResetSheet from './ResetSheet'
 import { Audio } from 'expo-av'
 import { BlurView } from 'expo-blur'
 import { Vibration } from 'react-native'
+import EditTask from './EditTask'
 
 type CountdownProps = {
     focusMinutes: number
@@ -54,7 +55,7 @@ export default function Countdown({
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const soundRef = useRef<Audio.Sound | null>(null)
 
-
+    const [selectedTask, setSelectedTask] = useState("Focus")
 
     useEffect(() => {
         if (phase === 'focus') setTimeLeft(focusMinutes * 60)
@@ -356,8 +357,11 @@ export default function Countdown({
 
     return (
         <YStack width="100%" items="center" gap="$2">
-            <Paragraph>{getPhaseLabel()}</Paragraph>
-            <H1 mt="$4" style={{ fontSize: 78, fontWeight: 100 }}>{formatTime(timeLeft)}</H1>
+            <EditTask 
+                selectedTask={selectedTask}
+                setSelectedTask={setSelectedTask}
+            />
+            <H1 mt="$5" style={{ fontSize: 78, fontWeight: 100 }}>{formatTime(timeLeft)}</H1>
             {renderRoundCircles()}
             <XStack gap="$2" items="center">
                 <ResetSheet onFinish={handleDialogFinish} timeLeft={timeLeft} initialTime={focusMinutes * 60} />
