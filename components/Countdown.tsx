@@ -6,6 +6,7 @@ import { Audio } from 'expo-av'
 import { BlurView } from 'expo-blur'
 import { Vibration } from 'react-native'
 import EditTask from './EditTask'
+import { Task } from 'app/(tabs)'
 
 type CountdownProps = {
     focusMinutes: number
@@ -14,9 +15,12 @@ type CountdownProps = {
     rounds: number
     focusMusic?: string | null
     breakMusic?: string | null
-    onProgressChange?: (progress: number) => void // add this
+    onProgressChange?: (progress: number) => void
+    tasks: Task[]
+    setTasks: React.Dispatch<React.SetStateAction<Task[]>>
+    selectedTask: Task | null
+    setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>
 }
-
 
 type Phase = 'focus' | 'short' | 'long'
 
@@ -46,7 +50,12 @@ export default function Countdown({
     focusMusic,
     breakMusic,
     onProgressChange,
-}: CountdownProps & { focusMusic?: string | null; breakMusic?: string | null }) {
+    tasks,
+    setTasks,
+    selectedTask,
+    setSelectedTask,
+}: CountdownProps) {
+
     const [phase, setPhase] = useState<Phase>('focus')
     const [currentRound, setCurrentRound] = useState(0)
     const [isRunning, setIsRunning] = useState(false)
@@ -54,8 +63,6 @@ export default function Countdown({
     const [musicIndex, setMusicIndex] = useState(0)
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const soundRef = useRef<Audio.Sound | null>(null)
-
-    const [selectedTask, setSelectedTask] = useState("Focus")
 
     useEffect(() => {
         if (phase === 'focus') setTimeLeft(focusMinutes * 60)
@@ -355,12 +362,26 @@ export default function Countdown({
         }
     }, [isRunning])
 
+    useEffect(() => {
+        setIsRunning(false)
+
+        if (phase === 'focus') {
+            setTimeLeft(focusMinutes * 60)
+        } else if (phase === 'short') {
+            setTimeLeft(shortBreakMinutes * 60)
+        } else if (phase === 'long') {
+            setTimeLeft(longBreakMinutes * 60)
+        }
+    }, [selectedTask])
+
     return (
         <YStack width="100%" items="center" gap="$2">
             {phase === "focus" ? (
                 <EditTask
                     selectedTask={selectedTask}
                     setSelectedTask={setSelectedTask}
+                    tasks={tasks}
+                    setTasks={setTasks}
                 />
             ) : (
                 <Paragraph>{getPhaseLabel()}</Paragraph>

@@ -18,6 +18,22 @@ const DEFAULT = {
   breakMusic: null,
 }
 
+export const DEFAULT_TASK: Task = {
+  name: 'Focus',
+  focusMinutes: 25,
+  shortBreakMinutes: 5,
+  longBreakMinutes: 15,
+  rounds: 4,
+}
+
+export type Task = {
+  name: string
+  focusMinutes: number
+  shortBreakMinutes: number
+  longBreakMinutes: number
+  rounds: number
+}
+
 export default function TabFocusScreen() {
   const [focusMinutes, setFocusMinutes] = useState(DEFAULT.focusMinutes)
   const [shortBreakMinutes, setShortBreakMinutes] = useState(DEFAULT.shortBreakMinutes)
@@ -31,7 +47,20 @@ export default function TabFocusScreen() {
   const [timerSettingOpen, setTimerSettingOpen] = useState(false)
 
   const [progress, setProgress] = useState(0)
+
+  const [tasks, setTasks] = useState<Task[]>([DEFAULT_TASK])
+  const [selectedTask, setSelectedTask] = useState<Task | null>(DEFAULT_TASK)
+
   const { width, height } = useWindowDimensions()
+
+  useEffect(() => {
+    if (selectedTask) {
+      setFocusMinutes(selectedTask.focusMinutes)
+      setShortBreakMinutes(selectedTask.shortBreakMinutes)
+      setLongBreakMinutes(selectedTask.longBreakMinutes)
+      setRounds(selectedTask.rounds)
+    }
+  }, [selectedTask])
 
   return (
     <>
@@ -45,29 +74,29 @@ export default function TabFocusScreen() {
         width={width}
         position="absolute"
       >
-          <LiquidGaugeModified
-            height={height}
-            width={width}
-            value={progress * 100}
-            config={{
-              minValue: 0,
-              maxValue: 100,
-              circleThickness: 0,
-              circleFillGap: 0,
-              circleColor: 'transparent',
-              waveHeight: 0.023,
-              waveCount: 1.2,
-              waveRiseTime: 1800,
-              waveAnimateTime: 6000,
-              waveRise: true,
-              waveHeightScaling: true,
-              waveAnimate: true,
-              waveColor: 'rgba(20, 91, 232, 1)',
-              waveOffset: 0.2,
-              textSuffix: '',
-              textSize: 0,
-            }}
-          />
+        <LiquidGaugeModified
+          height={height}
+          width={width}
+          value={progress * 100}
+          config={{
+            minValue: 0,
+            maxValue: 100,
+            circleThickness: 0,
+            circleFillGap: 0,
+            circleColor: 'transparent',
+            waveHeight: 0.023,
+            waveCount: 1.2,
+            waveRiseTime: 1800,
+            waveAnimateTime: 6000,
+            waveRise: true,
+            waveHeightScaling: true,
+            waveAnimate: true,
+            waveColor: 'rgba(20, 91, 232, 1)',
+            waveOffset: 0.2,
+            textSuffix: '',
+            textSize: 0,
+          }}
+        />
       </YStack>
 
       {/* Rest of the UI on top of the Liquid Gauge */}
@@ -89,6 +118,10 @@ export default function TabFocusScreen() {
           focusMusic={focusMusic}
           breakMusic={breakMusic}
           onProgressChange={setProgress}
+          tasks={tasks}
+          setTasks={setTasks}
+          selectedTask={selectedTask}
+          setSelectedTask={setSelectedTask}
         />
 
         <MusicSheet
