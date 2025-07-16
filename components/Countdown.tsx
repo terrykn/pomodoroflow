@@ -7,6 +7,7 @@ import { BlurView } from 'expo-blur'
 import { Vibration } from 'react-native'
 import EditTask from './EditTask'
 import { Task } from 'app/(tabs)'
+import { saveTaskSession } from 'utils/storage'
 
 type CountdownProps = {
     focusMinutes: number
@@ -143,14 +144,40 @@ export default function Countdown({
         if (timeLeft === 0) {
             setIsRunning(false);
             playDingSound();
-            Vibration.vibrate(200)
+            Vibration.vibrate(200);
+
+            // Save completed task and log outcome
+            if (selectedTask) {
+                const now = new Date();
+                const yyyyMmDd = now.toISOString().split('T')[0];
+                const session = {
+                    name: selectedTask.name,
+                    timeSpent:
+                        phase === 'focus'
+                            ? focusMinutes
+                            : phase === 'short'
+                                ? shortBreakMinutes
+                                : longBreakMinutes,
+                    date: yyyyMmDd,
+                };
+
+                saveTaskSession(session)
+                    .then(() => {
+                        console.log(
+                            `Task saved successfully: name=${session.name}, timeSpent=${session.timeSpent}, date=${session.date}`
+                        );
+                    })
+                    .catch((error) => {
+                        console.error('Failed to save task session:', error);
+                    });
+            }
 
             if (phase === 'focus') {
                 if (currentRound < rounds) {
-                    setCurrentRound(r => r + 1);
+                    setCurrentRound((r) => r + 1);
                     setPhase('short');
                 } else {
-                    setCurrentRound(r => r + 1);
+                    setCurrentRound((r) => r + 1);
                     setPhase('long');
                 }
             } else if (phase === 'short' || phase === 'long') {
@@ -158,7 +185,6 @@ export default function Countdown({
             }
         }
     }, [timeLeft]);
-
 
     // Focus phase music effect
     useEffect(() => {
@@ -328,15 +354,45 @@ export default function Countdown({
         }
     }
 
+    async function saveFocusSession() {
+        if (selectedTask && phase === 'focus') {
+            const now = new Date();
+            const yyyyMmDd = now.toISOString().split('T')[0];
+
+            const timeSpentMinutes = (focusMinutes * 60 - timeLeft) / 60;
+
+            if (timeSpentMinutes > 0) {
+                const session = {
+                    name: selectedTask.name,
+                    timeSpent: timeSpentMinutes,
+                    date: yyyyMmDd,
+                };
+
+                try {
+                    await saveTaskSession(session);
+                    console.log(
+                        `Task saved successfully on finish: name=${session.name}, timeSpent=${session.timeSpent}, date=${session.date}`
+                    );
+                } catch (error) {
+                    console.error('Failed to save task session on finish:', error);
+                }
+            }
+        }
+    }
+
     function handleDialogFinish() {
-        setIsRunning(false)
-        setCurrentRound(0)
-        setPhase('focus')
-        setTimeLeft(focusMinutes * 60)
+        setIsRunning(false);
+
+        saveFocusSession();
+
+        setCurrentRound(0);
+        setPhase('focus');
+        setTimeLeft(focusMinutes * 60);
+
         if (soundRef.current) {
-            soundRef.current.stopAsync()
-            soundRef.current.unloadAsync()
-            soundRef.current = null
+            soundRef.current.stopAsync();
+            soundRef.current.unloadAsync();
+            soundRef.current = null;
         }
     }
 
@@ -444,6 +500,7 @@ export default function Countdown({
             )}
             <H1 mt="$4" style={{ fontSize: 78, fontWeight: 100 }}>{formatTime(timeLeft)}</H1>
             {renderRoundCircles()}
+
             <XStack gap="$2" items="center">
                 <ResetSheet onFinish={handleDialogFinish} timeLeft={timeLeft} initialTime={focusMinutes * 60} />
                 <BlurView intensity={50} tint="dark" style={{ borderRadius: 35, overflow: 'hidden' }}>

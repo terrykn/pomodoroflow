@@ -3,6 +3,12 @@ import { useRouter } from 'expo-router'
 import { StackedBarChart } from 'components/StackedBarChart'
 import { H6 } from 'tamagui'
 
+import { useEffect, useState } from 'react'
+import { STORAGE_KEYS, loadFromStorage, TaskSession } from 'utils/storage'
+
+import { useFocusEffect } from 'expo-router'
+import { useCallback } from 'react'
+
 export type WeekTask = {
   name: string
   timeSpent: number
@@ -13,22 +19,50 @@ export default function TabInsightsScreen() {
   const isLoggedIn = true // Replace with your auth state
   const router = useRouter()
 
-  const thisWeekTasks: WeekTask[] = [
-    { name: 'Write Report', timeSpent: 90, date: '2025-07-13' },
-    { name: 'Journaling', timeSpent: 42, date: '2025-07-13' },
-    { name: 'Studying', timeSpent: 62, date: '2025-07-13' },
-    { name: 'Read Book', timeSpent: 60, date: '2025-07-12' },
-    { name: 'Write Report', timeSpent: 45, date: '2025-07-12' },
-    { name: 'Mediation', timeSpent: 45, date: '2025-07-12' },
-    { name: 'Plan Meeting', timeSpent: 30, date: '2025-07-11' },
-  ]
 
-  const lastWeekTasks: WeekTask[] = [
-    { name: 'Read Book', timeSpent: 30, date: '2025-07-06' },
-    { name: 'Write Report', timeSpent: 120, date: '2025-07-05' },
-    { name: 'Design Slides', timeSpent: 60, date: '2025-07-04' },
-    { name: 'Mediation', timeSpent: 45, date: '2025-07-04' },
-  ]
+  const [thisWeekTasks, setThisWeekTasks] = useState<WeekTask[]>([])
+  const [lastWeekTasks, setLastWeekTasks] = useState<WeekTask[]>([])
+
+  useFocusEffect(
+    useCallback(() => {
+      async function loadTasks() {
+        const sessions = await loadFromStorage<TaskSession[]>(STORAGE_KEYS.TASK_SESSIONS) || []
+        console.log("🔥 Task session data loaded:", sessions)
+
+        const now = new Date()
+        const thisWeekStart = new Date(now)
+        thisWeekStart.setDate(now.getDate() - now.getDay())
+
+        const lastWeekStart = new Date(thisWeekStart)
+        lastWeekStart.setDate(thisWeekStart.getDate() - 7)
+        const lastWeekEnd = new Date(thisWeekStart)
+
+        const thisWeek: WeekTask[] = []
+        const lastWeek: WeekTask[] = []
+
+        for (const session of sessions) {
+          const sessionDate = new Date(session.date)
+          const roundedTimeSpent = Math.round(session.timeSpent)
+
+          const roundedSession = {
+            ...session,
+            timeSpent: roundedTimeSpent,
+          }
+
+          if (sessionDate >= thisWeekStart) {
+            thisWeek.push(roundedSession)
+          } else if (sessionDate >= lastWeekStart && sessionDate < lastWeekEnd) {
+            lastWeek.push(roundedSession)
+          }
+        }
+
+        setThisWeekTasks(thisWeek)
+        setLastWeekTasks(lastWeek)
+      }
+
+      loadTasks()
+    }, [])
+  )
 
   if (!isLoggedIn) {
     return (

@@ -141,7 +141,7 @@ export default function TabFocusScreen() {
             circleColor: 'transparent',
             waveHeight: 0.023,
             waveCount: 1.2,
-            waveRiseTime: 1800,
+            waveRiseTime: 1400,
             waveAnimateTime: 6000,
             waveRise: true,
             waveHeightScaling: true,

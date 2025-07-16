@@ -225,11 +225,11 @@ export const LiquidGaugeModified = ({
                                 start={vec(0, 0)}
                                 end={vec(0, height)}
                                 colors={[
-                                    'rgba(47, 89, 255, 1)',
-                                    'rgba(33, 76, 250, 0.9)',
-                                    'rgba(11, 60, 255, 0.8)',
-                                    'rgba(11, 60, 255, 0.7)',
-                                    'rgba(0, 47, 234, 0.45)',
+                                    'rgba(19, 94, 255, 1)',
+                                    'rgba(27, 73, 255, 1)',
+                                    'rgba(0, 28, 214, 1)',
+                                    'rgba(0, 23, 170, 1)',
+                                    'rgba(0, 18, 135, 1)',
                                 ]}
                             />
                         </Rect>
