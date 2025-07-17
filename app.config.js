@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "pomodoro-flow",
     "slug": "pomodoro-flow",
@@ -16,13 +16,20 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.terry.pomodoroflow",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "googleServicesFile": process.env.GOOGLE_SERVICE_INFO_PLIST || "GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.terry.pomodoroflow",
+      "googleServicesFile": process.env.GOOGLE_SERVICES_JSON || "google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -43,10 +50,17 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e8325eb1-d33e-438e-bf35-8fd433a0ac55"
+      }
     }
   }
 }

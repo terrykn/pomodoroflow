@@ -9,6 +9,8 @@ import { STORAGE_KEYS, loadFromStorage, TaskSession } from 'utils/storage'
 import { useFocusEffect } from 'expo-router'
 import { useCallback } from 'react'
 
+import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin'
+
 export type WeekTask = {
   name: string
   timeSpent: number
@@ -19,9 +21,33 @@ export default function TabInsightsScreen() {
   const isLoggedIn = true // Replace with your auth state
   const router = useRouter()
 
-
   const [thisWeekTasks, setThisWeekTasks] = useState<WeekTask[]>([])
   const [lastWeekTasks, setLastWeekTasks] = useState<WeekTask[]>([])
+
+  const [error, setError] = useState();
+  const [userInfo, setUserInfo] = useState();
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: "47231083979-a3ihlpdljqb3shijgqtub9081u5tgr3k.apps.googleusercontent.com"
+    });
+  }, []);
+
+  const signIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const user = await GoogleSignin.signIn();
+      setUserInfo(user);
+    } catch (err) {
+      setError(err)
+    }
+  }
+
+  const logOut = () => {
+    setUserInfo(null);
+    GoogleSignin.revokeAccess();
+    GoogleSignin.signOut();
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -64,20 +90,22 @@ export default function TabInsightsScreen() {
     }, [])
   )
 
-  if (!isLoggedIn) {
-    return (
-      <View flex={1} items="center" justify="center" bg="$background">
-        <H6>Login to track insights</H6>
-        <Button onPress={() => router.push('/login')}>Login</Button>
-      </View>
-    )
-  }
-
   return (
     <View flex={1} p="$4" bg="$background">
-      <YStack gap="$4" pt="$8">
-        <StackedBarChart lastWeekTasks={lastWeekTasks} thisWeekTasks={thisWeekTasks} />
-      </YStack>
+      {userInfo && <Text>{JSON.stringify(userInfo.user)}</Text>}
+      {userInfo ? (
+        <View flex={1} p="$4" bg="$background">
+          <Button onPress={logOut}>Log Out</Button>
+          <YStack gap="$4" pt="$8">
+            <StackedBarChart lastWeekTasks={lastWeekTasks} thisWeekTasks={thisWeekTasks} />
+          </YStack>
+        </View>
+      ) : (
+        <View flex={1} p="$4" bg="$background">
+          <Text>Login to Track Insights</Text>
+          <GoogleSigninButton size={GoogleSigninButton.Size.Standard} color={GoogleSigninButton.Color.Dark} onPress={signIn} />
+        </View>
+      )}
     </View>
   )
 }
