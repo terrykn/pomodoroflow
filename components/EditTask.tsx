@@ -53,13 +53,15 @@ export default function EditTask({ selectedTask, setSelectedTask, tasks, setTask
             <BlurView intensity={50} tint="dark" style={{ borderRadius: 16, overflow: "hidden" }}>
                 <Button
                     chromeless
-                    bg="rgba(255, 255, 255, 0.03)"
+                    bg="rgba(255, 255, 255, 0.02)"
                     borderRadius={16}
                     onPress={() => setOpen(true)}
+                    size={42}
+                    px={16}
                 >
                     <XStack items="center" gap="$2">
                         <Paragraph>{selectedTask?.name}</Paragraph>
-                        <Pen size={16} />
+                        <Pen size={14} />
                     </XStack>
                 </Button>
             </BlurView>

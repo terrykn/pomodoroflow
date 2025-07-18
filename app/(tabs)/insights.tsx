@@ -5,6 +5,7 @@ import { H6 } from 'tamagui'
 
 import { useEffect, useState } from 'react'
 import { STORAGE_KEYS, loadFromStorage, TaskSession } from 'utils/storage'
+import ClearStorageButton from 'components/ClearStorageButton'
 
 import { useFocusEffect } from 'expo-router'
 import { useCallback } from 'react'
@@ -31,7 +32,8 @@ export default function TabInsightsScreen() {
 
         const now = new Date()
         const thisWeekStart = new Date(now)
-        thisWeekStart.setDate(now.getDate() - now.getDay())
+        thisWeekStart.setHours(0, 0, 0, 0)
+        thisWeekStart.setDate(now.getDate() - now.getDay()) // Sunday start
 
         const lastWeekStart = new Date(thisWeekStart)
         lastWeekStart.setDate(thisWeekStart.getDate() - 7)
@@ -41,18 +43,32 @@ export default function TabInsightsScreen() {
         const lastWeek: WeekTask[] = []
 
         for (const session of sessions) {
-          const sessionDate = new Date(session.date)
-          const roundedTimeSpent = Math.round(session.timeSpent)
+          // parse UTC ISO date string to Date object (in UTC)
+          const sessionUTC = new Date(session.date)
 
-          const roundedSession = {
-            ...session,
-            timeSpent: roundedTimeSpent,
+          // convert UTC date to local date string YYYY-MM-DD
+          const localYear = sessionUTC.getFullYear()
+          const localMonth = sessionUTC.getMonth()
+          const localDay = sessionUTC.getDate()
+
+          // create a local Date using the UTC date parts
+          // this interprets year/month/day as local time (midnight)
+          const sessionLocalDateObj = new Date(localYear, localMonth, localDay)
+
+          // format as ISO local date string (YYYY-MM-DD)
+          const sessionLocalDateString = sessionLocalDateObj.toISOString().split('T')[0]
+
+          // create WeekTask with local date string
+          const weekTask: WeekTask = {
+            name: session.name,
+            timeSpent: session.timeSpent,
+            date: sessionLocalDateString,
           }
 
-          if (sessionDate >= thisWeekStart) {
-            thisWeek.push(roundedSession)
-          } else if (sessionDate >= lastWeekStart && sessionDate < lastWeekEnd) {
-            lastWeek.push(roundedSession)
+          if (sessionLocalDateObj >= thisWeekStart) {
+            thisWeek.push(weekTask)
+          } else if (sessionLocalDateObj >= lastWeekStart && sessionLocalDateObj < lastWeekEnd) {
+            lastWeek.push(weekTask)
           }
         }
 

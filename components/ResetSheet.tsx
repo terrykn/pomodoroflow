@@ -26,9 +26,9 @@ export default function ResetSheet({ onFinish, timeLeft, initialTime }: ResetShe
                     disabled={isDisabled}
                 >
                     <Check />
-                </Button>    
+                </Button>
             </BlurView>
-            
+
             <Sheet
                 open={open}
                 onOpenChange={setOpen}
@@ -39,8 +39,8 @@ export default function ResetSheet({ onFinish, timeLeft, initialTime }: ResetShe
                 <Sheet.Overlay />
                 <Sheet.Handle />
                 <YStack p="$4" gap="$3">
-                    <H5>End Session</H5>
-                    <Paragraph>Do you want to finish this session?</Paragraph>
+                    <H5>Finish Session</H5>
+                    <Paragraph>Would you like to finish and save your progress?</Paragraph>
                     <XStack gap="$2" justify="flex-end">
                         <Button
                             onPress={() => setOpen(false)}

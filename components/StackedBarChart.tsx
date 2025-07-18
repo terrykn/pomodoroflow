@@ -49,8 +49,13 @@ const getTimeSpentPerTask = (tasks: WeekTask[]) => {
 }
 
 const formatMinutes = (mins: number): string => {
+  if (mins < 1) {
+    // Show seconds if less than 1 minute
+    const seconds = Math.round(mins * 60)
+    return `${seconds}s`
+  }
   const hours = Math.floor(mins / 60)
-  const minutes = mins % 60
+  const minutes = Math.floor(mins % 60)
   return `${hours > 0 ? `${hours}hr ` : ''}${minutes}min`
 }
 
@@ -211,7 +216,7 @@ export const StackedBarChart = ({ thisWeekTasks, lastWeekTasks }: StackedBarChar
                 borderBottomLeftRadius={6}
                 borderBottomRightRadius={6}
                 overflow="hidden"
-                backgroundColor="#ddd"
+                bg="#ddd"
               >
                 <YStack style={{ flex: 1 }} justify="flex-end">
                   {tasksThisDay.map((task, i) => {
@@ -222,7 +227,7 @@ export const StackedBarChart = ({ thisWeekTasks, lastWeekTasks }: StackedBarChar
                         key={`bar-${i}`}
                         width="100%"
                         height={height}
-                        backgroundColor={color}
+                        bg={color}
                       />
                     )
                   })}

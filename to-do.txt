@@ -1,5 +1,4 @@
-1. Fix music selection changing in Countdown.tsx not working
+
 2. Reorganize Countdown.tsx and make more modular
-3. Fix dates on WeekTask
 4. Set up FireBase auth
 5. Set up Firebase storage

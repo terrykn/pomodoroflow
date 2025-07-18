@@ -49,7 +49,7 @@ export default function TabFocusScreen() {
 
   const [progress, setProgress] = useState(0)
 
-  const [tasks, setTasks] = useState<Task[] | null>(null)
+  const [tasks, setTasks] = useState<Task[]>([DEFAULT_TASK])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [focusMusic, setFocusMusic] = useState<string | null>(null)
   const [breakMusic, setBreakMusic] = useState<string | null>(null)

@@ -1,4 +1,4 @@
-import { Button, XStack, YStack, Paragraph, H1 } from 'tamagui'
+import { Button, XStack, YStack, Paragraph, H1, Text } from 'tamagui'
 import { Play, Pause, Circle, CheckCircle, Check, SkipForward } from '@tamagui/lucide-icons'
 import { useState, useRef, useEffect } from 'react'
 import ResetSheet from './ResetSheet'
@@ -69,6 +69,8 @@ export default function Countdown({
     const [breakMusicIndex, setBreakMusicIndex] = useState(0)
     const [breakMusicPosition, setBreakMusicPosition] = useState(0)
 
+    const [focusTimeSpent, setFocusTimeSpent] = useState(0)
+
     useEffect(() => {
         async function stopAndResetAudio() {
             if (soundRef.current) {
@@ -104,6 +106,16 @@ export default function Countdown({
 
         return () => clearInterval(timerRef.current);
     }, [isRunning]);
+
+    useEffect(() => {
+        if (!isRunning || phase !== 'focus') return;
+
+        const interval = setInterval(() => {
+            setFocusTimeSpent(prev => prev + 1)
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [isRunning, phase])
 
     useEffect(() => {
         async function controlSound() {
@@ -146,32 +158,6 @@ export default function Countdown({
             playDingSound();
             Vibration.vibrate(200);
 
-            // Save completed task and log outcome
-            if (selectedTask) {
-                const now = new Date();
-                const yyyyMmDd = now.toISOString().split('T')[0];
-                const session = {
-                    name: selectedTask.name,
-                    timeSpent:
-                        phase === 'focus'
-                            ? focusMinutes
-                            : phase === 'short'
-                                ? shortBreakMinutes
-                                : longBreakMinutes,
-                    date: yyyyMmDd,
-                };
-
-                saveTaskSession(session)
-                    .then(() => {
-                        console.log(
-                            `Task saved successfully: name=${session.name}, timeSpent=${session.timeSpent}, date=${session.date}`
-                        );
-                    })
-                    .catch((error) => {
-                        console.error('Failed to save task session:', error);
-                    });
-            }
-
             if (phase === 'focus') {
                 if (currentRound < rounds) {
                     setCurrentRound((r) => r + 1);
@@ -185,110 +171,6 @@ export default function Countdown({
             }
         }
     }, [timeLeft]);
-
-    // Focus phase music effect
-    useEffect(() => {
-        if (phase !== 'focus' || !isRunning) return
-
-        let isMounted = true
-
-        async function playMusic() {
-            if (soundRef.current) {
-                const status = await soundRef.current.getStatusAsync()
-                if (status.isLoaded) {
-                    await soundRef.current.setPositionAsync(focusMusicPosition)
-                    await soundRef.current.playAsync()
-                    return
-                } else {
-                    await soundRef.current.unloadAsync()
-                    soundRef.current = null
-                }
-            }
-
-            const files = getAudioFiles(focusMusic ?? null)
-            if (!files.length) return
-
-            let idx = focusMusicIndex
-            if (idx >= files.length) idx = 0
-
-            const audioModule = AUDIO_MAP[files[idx]]
-            if (!audioModule) return
-
-            const { sound } = await Audio.Sound.createAsync(audioModule, {
-                shouldPlay: true,
-                isLooping: false,
-            })
-            soundRef.current = sound
-
-            sound.setOnPlaybackStatusUpdate((status) => {
-                if (!isMounted) return
-                if (status.isLoaded && status.didJustFinish) {
-                    let nextIdx = idx + 1
-                    if (nextIdx >= files.length) nextIdx = 0
-                    setFocusMusicIndex(nextIdx)
-                    setFocusMusicPosition(0)
-                }
-            })
-        }
-
-        playMusic()
-
-        return () => {
-            isMounted = false
-        }
-    }, [phase, focusMusic, focusMusicIndex, isRunning, focusMusicPosition])
-
-    // Break phase music effect
-    useEffect(() => {
-        if ((phase !== 'short' && phase !== 'long') || !isRunning) return
-
-        let isMounted = true
-
-        async function playMusic() {
-            if (soundRef.current) {
-                const status = await soundRef.current.getStatusAsync()
-                if (status.isLoaded) {
-                    await soundRef.current.setPositionAsync(breakMusicPosition)
-                    await soundRef.current.playAsync()
-                    return
-                } else {
-                    await soundRef.current.unloadAsync()
-                    soundRef.current = null
-                }
-            }
-
-            const files = getAudioFiles(breakMusic ?? null)
-            if (!files.length) return
-
-            let idx = breakMusicIndex
-            if (idx >= files.length) idx = 0
-
-            const audioModule = AUDIO_MAP[files[idx]]
-            if (!audioModule) return
-
-            const { sound } = await Audio.Sound.createAsync(audioModule, {
-                shouldPlay: true,
-                isLooping: false,
-            })
-            soundRef.current = sound
-
-            sound.setOnPlaybackStatusUpdate((status) => {
-                if (!isMounted) return
-                if (status.isLoaded && status.didJustFinish) {
-                    let nextIdx = idx + 1
-                    if (nextIdx >= files.length) nextIdx = 0
-                    setBreakMusicIndex(nextIdx)
-                    setBreakMusicPosition(0)
-                }
-            })
-        }
-
-        playMusic()
-
-        return () => {
-            isMounted = false
-        }
-    }, [phase, breakMusic, breakMusicIndex, isRunning, breakMusicPosition])
 
     useEffect(() => {
         return () => {
@@ -333,7 +215,7 @@ export default function Countdown({
         setIsRunning(r => !r)
     }
 
-    function handleSkip() {
+    async function handleSkip() {
         setIsRunning(false)
         clearInterval(timerRef.current!)
 
@@ -345,49 +227,40 @@ export default function Countdown({
                 setCurrentRound(r => r + 1)
                 setPhase('long')
             }
-        } else if (phase === 'short') {
-
-            setPhase('focus')
-        } else if (phase === 'long') {
-
+        } else if (phase === 'short' || phase === 'long') {
             setPhase('focus')
         }
     }
 
-    async function saveFocusSession() {
-        if (selectedTask && phase === 'focus') {
-            const now = new Date();
-            const yyyyMmDd = now.toISOString().split('T')[0];
+async function saveFocusSession() {
+    if (selectedTask && focusTimeSpent > 0) {
+        const nowUTC = new Date(); 
+        const session = {
+            name: selectedTask.name,
+            timeSpent: focusTimeSpent / 60, // convert to minutes
+            date: nowUTC,
+        };
 
-            const timeSpentMinutes = (focusMinutes * 60 - timeLeft) / 60;
-
-            if (timeSpentMinutes > 0) {
-                const session = {
-                    name: selectedTask.name,
-                    timeSpent: timeSpentMinutes,
-                    date: yyyyMmDd,
-                };
-
-                try {
-                    await saveTaskSession(session);
-                    console.log(
-                        `Task saved successfully on finish: name=${session.name}, timeSpent=${session.timeSpent}, date=${session.date}`
-                    );
-                } catch (error) {
-                    console.error('Failed to save task session on finish:', error);
-                }
-            }
+        try {
+            await saveTaskSession(session);
+            console.log(
+                `Task saved successfully on finish: name=${session.name}, timeSpent=${session.timeSpent}, date=${session.date.toISOString()}`
+            );
+        } catch (error) {
+            console.error('Failed to save task session on finish:', error);
         }
     }
+}
 
     function handleDialogFinish() {
         setIsRunning(false);
-
+        console.log("Clicked finish")
         saveFocusSession();
 
         setCurrentRound(0);
         setPhase('focus');
         setTimeLeft(focusMinutes * 60);
+        setFocusTimeSpent(0); // reset tracked time
 
         if (soundRef.current) {
             soundRef.current.stopAsync();
@@ -465,6 +338,60 @@ export default function Countdown({
     }, [])
 
     useEffect(() => {
+        let isMounted = true;
+
+        async function loadAndPlayMusic() {
+            // stop & unload existing sound if any
+            if (soundRef.current) {
+                try {
+                    await soundRef.current.stopAsync();
+                    await soundRef.current.unloadAsync();
+                } catch (e) {
+                    console.warn('Error stopping/unloading audio:', e);
+                }
+                soundRef.current = null;
+            }
+
+            // determine which music to play
+            const musicOption = phase === 'focus' ? focusMusic : breakMusic;
+            const files = getAudioFiles(musicOption ?? null);
+            if (!files.length) return;
+
+            const audioModule = AUDIO_MAP[files[0]]; // always start from 0
+            if (!audioModule) return;
+
+            const { sound } = await Audio.Sound.createAsync(audioModule, {
+                shouldPlay: isRunning,
+                isLooping: false,
+            });
+
+            soundRef.current = sound;
+
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (!isMounted || !status.isLoaded) return;
+
+                if (status.didJustFinish) {
+                    if (phase === 'focus') {
+                        setFocusMusicIndex(0);
+                        setFocusMusicPosition(0);
+                    } else {
+                        setBreakMusicIndex(0);
+                        setBreakMusicPosition(0);
+                    }
+                }
+            });
+        }
+
+        if (isRunning) {
+            loadAndPlayMusic();
+        }
+
+        return () => {
+            isMounted = false;
+        };
+    }, [phase, focusMusic, breakMusic, isRunning]);
+
+    useEffect(() => {
         if (soundRef.current) {
             if (isRunning) {
                 soundRef.current.playAsync()
@@ -500,7 +427,6 @@ export default function Countdown({
             )}
             <H1 mt="$4" style={{ fontSize: 78, fontWeight: 100 }}>{formatTime(timeLeft)}</H1>
             {renderRoundCircles()}
-
             <XStack gap="$2" items="center">
                 <ResetSheet onFinish={handleDialogFinish} timeLeft={timeLeft} initialTime={focusMinutes * 60} />
                 <BlurView intensity={50} tint="dark" style={{ borderRadius: 35, overflow: 'hidden' }}>
