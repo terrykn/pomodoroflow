@@ -3,7 +3,9 @@ import { BlurView } from "expo-blur"
 import { useState } from "react"
 import { Keyboard, TouchableWithoutFeedback } from "react-native"
 import { Button, H5, Input, Paragraph, Sheet, XStack, YStack, ScrollView } from "tamagui"
-import { Task } from "app/(tabs)" // Ensure this is correctly imported
+import { Task } from "app/(tabs)"
+import { saveToStorage, STORAGE_KEYS } from 'utils/storage'
+import { DEFAULT_TASK } from "app/(tabs)"
 
 const INITIAL_TASK: Task = {
     name: '',
@@ -28,10 +30,15 @@ export default function EditTask({ selectedTask, setSelectedTask, tasks, setTask
 
     const handleDeletePress = (taskName: string) => {
         if (confirmingDelete === taskName) {
-            setTasks((prev) => prev.filter((t) => t.name !== taskName))
+            setTasks((prev) => {
+                const updatedTasks = prev.filter((t) => t.name !== taskName)
+                saveToStorage(STORAGE_KEYS.TASKS, updatedTasks)
+                return updatedTasks
+            })
             setConfirmingDelete(null)
             if (selectedTask?.name === taskName) {
-                setSelectedTask(null)
+                setSelectedTask(DEFAULT_TASK)
+                saveToStorage(STORAGE_KEYS.SELECTED_TASK, null)
             }
         } else {
             setConfirmingDelete(taskName)

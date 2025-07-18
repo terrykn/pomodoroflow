@@ -232,25 +232,25 @@ export default function Countdown({
         }
     }
 
-async function saveFocusSession() {
-    if (selectedTask && focusTimeSpent > 0) {
-        const nowUTC = new Date(); 
-        const session = {
-            name: selectedTask.name,
-            timeSpent: focusTimeSpent / 60, // convert to minutes
-            date: nowUTC,
-        };
+    async function saveFocusSession() {
+        if (selectedTask && focusTimeSpent > 0) {
+            const nowUTC = new Date();
+            const session = {
+                name: selectedTask.name,
+                timeSpent: focusTimeSpent / 60, // convert to minutes
+                date: nowUTC,
+            };
 
-        try {
-            await saveTaskSession(session);
-            console.log(
-                `Task saved successfully on finish: name=${session.name}, timeSpent=${session.timeSpent}, date=${session.date.toISOString()}`
-            );
-        } catch (error) {
-            console.error('Failed to save task session on finish:', error);
+            try {
+                await saveTaskSession(session);
+                console.log(
+                    `Task saved successfully on finish: name=${session.name}, timeSpent=${session.timeSpent}, date=${session.date.toISOString()}`
+                );
+            } catch (error) {
+                console.error('Failed to save task session on finish:', error);
+            }
         }
     }
-}
 
     function handleDialogFinish() {
         setIsRunning(false);

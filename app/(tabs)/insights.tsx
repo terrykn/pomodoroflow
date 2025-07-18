@@ -39,41 +39,49 @@ export default function TabInsightsScreen() {
         lastWeekStart.setDate(thisWeekStart.getDate() - 7)
         const lastWeekEnd = new Date(thisWeekStart)
 
-        const thisWeek: WeekTask[] = []
-        const lastWeek: WeekTask[] = []
+        // map to aggregate by 'name + localDateString'
+        const thisWeekMap = new Map<string, WeekTask>()
+        const lastWeekMap = new Map<string, WeekTask>()
 
         for (const session of sessions) {
-          // parse UTC ISO date string to Date object (in UTC)
-          const sessionUTC = new Date(session.date)
+          // session.date is ISO string saved in UTC, e.g. "2025-07-18T22:39:35.016Z"
+          const sessionDate = new Date(session.date)
 
-          // convert UTC date to local date string YYYY-MM-DD
-          const localYear = sessionUTC.getFullYear()
-          const localMonth = sessionUTC.getMonth()
-          const localDay = sessionUTC.getDate()
+          // (local timezone)
+          const localYear = sessionDate.getFullYear()
+          const localMonth = sessionDate.getMonth()
+          const localDay = sessionDate.getDate()
 
-          // create a local Date using the UTC date parts
-          // this interprets year/month/day as local time (midnight)
-          const sessionLocalDateObj = new Date(localYear, localMonth, localDay)
+          // construct a Date at local midnight of that date
+          const localMidnightDate = new Date(localYear, localMonth, localDay)
 
-          // format as ISO local date string (YYYY-MM-DD)
-          const sessionLocalDateString = sessionLocalDateObj.toISOString().split('T')[0]
+          // format YYYY-MM-DD
+          const localDateString = localMidnightDate.toISOString().split('T')[0]
 
-          // create WeekTask with local date string
-          const weekTask: WeekTask = {
-            name: session.name,
-            timeSpent: session.timeSpent,
-            date: sessionLocalDateString,
-          }
+          // key for aggregation: task name + date string
+          const key = `${session.name}_${localDateString}`
 
-          if (sessionLocalDateObj >= thisWeekStart) {
-            thisWeek.push(weekTask)
-          } else if (sessionLocalDateObj >= lastWeekStart && sessionLocalDateObj < lastWeekEnd) {
-            lastWeek.push(weekTask)
+          // decide which week bucket the session belongs to
+          const targetMap =
+            localMidnightDate >= thisWeekStart ? thisWeekMap :
+              localMidnightDate >= lastWeekStart && localMidnightDate < lastWeekEnd ? lastWeekMap :
+                null
+
+          if (!targetMap) continue
+
+          if (targetMap.has(key)) {
+            // add timeSpent if task already exists for that date
+            targetMap.get(key)!.timeSpent += session.timeSpent
+          } else {
+            targetMap.set(key, {
+              name: session.name,
+              timeSpent: session.timeSpent,
+              date: localDateString,
+            })
           }
         }
-
-        setThisWeekTasks(thisWeek)
-        setLastWeekTasks(lastWeek)
+        setThisWeekTasks(Array.from(thisWeekMap.values()))
+        setLastWeekTasks(Array.from(lastWeekMap.values()))
       }
 
       loadTasks()

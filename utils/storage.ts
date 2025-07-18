@@ -39,13 +39,10 @@ export async function saveTaskSession(session: TaskSession): Promise<void> {
   try {
     const existing = (await loadFromStorage<TaskSession[]>(STORAGE_KEYS.TASK_SESSIONS)) || [];
 
-    // normalize date to start of UTC day
-    const dateObj = new Date(session.date);
-    const utcDate = new Date(Date.UTC(dateObj.getUTCFullYear(), dateObj.getUTCMonth(), dateObj.getUTCDate()));
-
+    // (not normalizing it to midnight here anymore)
     const normalizedSession: TaskSession = {
       ...session,
-      date: utcDate,
+      date: new Date(session.date), // keep time intact
     };
 
     const twoWeeksAgo = new Date();
@@ -56,16 +53,7 @@ export async function saveTaskSession(session: TaskSession): Promise<void> {
       return d >= twoWeeksAgo;
     });
 
-    const index = freshSessions.findIndex(s =>
-      s.name === normalizedSession.name &&
-      new Date(s.date).toISOString().split('T')[0] === normalizedSession.date.toISOString().split('T')[0]
-    );
-
-    if (index !== -1) {
-      freshSessions[index].timeSpent += normalizedSession.timeSpent;
-    } else {
-      freshSessions.push(normalizedSession);
-    }
+    freshSessions.push(normalizedSession);
 
     await saveToStorage(STORAGE_KEYS.TASK_SESSIONS, freshSessions);
   } catch (error) {
